@@ -21,7 +21,7 @@ def analyze_sentiment(text):
     try:
         lang = detect(text)
     except lang_detect_exception.LangDetectException:
-        return "Нейтральная"
+        return "Neutral"
 
     try:
         if lang == "ru":
@@ -30,30 +30,33 @@ def analyze_sentiment(text):
             if len(scores) > 0:
                 sentiment = sum(scores) / len(scores)
             else:
-                return "Нейтральная"
+                return "Neutral"
         else:
             blob = TextBlob(text)
             scores = [sentence.sentiment.polarity for sentence in blob.sentences]
             if len(scores) > 0:
                 sentiment = sum(scores) / len(scores)
             else:
-                return "Нейтральная"
+                return "Neutral"
     except Exception as e:
         print(f"Unexpected error during sentiment analysis: {str(e)}")
-        return "Нейтральная"
+        return "Neutral"
 
     if sentiment > 0:
-        return "Позитивная"
+        return "Positive"
     elif sentiment < 0:
-        return "Негативная"
+        return "Negative"
     else:
-        return "Нейтральная"
+        return "Neutral"
 
 
 @dp.message_handler()
 async def send_welcome(message: types.Message):
     sentiment_label = analyze_sentiment(message.text)
-    await message.answer(f"Тональность сообщения: {sentiment_label}")
+    await message.answer(
+        f"🤖 We have processed your message and determined that your emotional coloring is - <b>{sentiment_label.capitalize()}</b>.",
+        parse_mode=types.ParseMode.HTML,
+    )
 
 
 if __name__ == "__main__":
