@@ -15,9 +15,28 @@ dp = Dispatcher(bot)
 def analyze_sentiment(text):
     blob = TextBlob(text)
     total_sentences = len(blob.sentences)
-    positive_count = sum(1 for sentence in blob.sentences if sentence.sentiment.polarity > 0)
-    negative_count = sum(1 for sentence in blob.sentences if sentence.sentiment.polarity < 0)
-    neutral_count = total_sentences - positive_count - negative_count
+    positive_sentences = [sentence for sentence in blob.sentences if sentence.sentiment.polarity > 0]
+    negative_sentences = [sentence for sentence in blob.sentences if sentence.sentiment.polarity < 0]
+    neutral_count = total_sentences - len(positive_sentences) - len(negative_sentences)
+
+    positive_count = len(positive_sentences)
+    negative_count = len(negative_sentences)
+    average_positive_polarity = (
+        sum(sentence.sentiment.polarity for sentence in positive_sentences) / positive_count if positive_count else 0
+    )
+    average_negative_polarity = (
+        sum(sentence.sentiment.polarity for sentence in negative_sentences) / negative_count if negative_count else 0
+    )
+    most_positive = (
+        max(positive_sentences, key=lambda sentence: sentence.sentiment.polarity, default="").string
+        if positive_sentences
+        else "Нет данных"
+    )
+    most_negative = (
+        min(negative_sentences, key=lambda sentence: sentence.sentiment.polarity, default="").string
+        if negative_sentences
+        else "Нет данных"
+    )
 
     if positive_count > negative_count and positive_count > neutral_count:
         sentiment_overall = "Положительный"
@@ -26,19 +45,29 @@ def analyze_sentiment(text):
     else:
         sentiment_overall = "Нейтральный"
 
-    return sentiment_overall, positive_count, negative_count, neutral_count, total_sentences
+    return (
+        sentiment_overall,
+        positive_count,
+        negative_count,
+        neutral_count,
+        total_sentences,
+        average_positive_polarity,
+        average_negative_polarity,
+        most_positive,
+        most_negative,
+    )
 
 
 @dp.message_handler(commands=["start"])
 async def send_welcome(message: types.Message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(types.KeyboardButton("Примеры"))
     await message.answer("Привет! Нажми на кнопку 'Примеры', чтобы увидеть дополнительные опции.", reply_markup=markup)
 
 
 @dp.message_handler(lambda message: message.text == "Примеры")
 async def show_examples(message: types.Message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(
         types.KeyboardButton("Нейтральное"), types.KeyboardButton("Позитивное"), types.KeyboardButton("Негативное")
     )
@@ -53,27 +82,29 @@ async def send_test_message(message: types.Message):
         "Негативное": "I can't believe the incompetence displayed in yesterday's presentation. It was an embarrassment, and awful, unacceptable. We've invested time and resources into this project, and to see it butchered like that is beyond disappointing. We need to get our act together and start producing quality work. This level of mediocrity is dragging us all down, and if we don't shape up, there will be serious consequences.",
     }
     chosen_message = test_messages[message.text]
-    sentiment_overall, positive_count, negative_count, neutral_count, total_sentences = analyze_sentiment(
-        chosen_message
-    )
+    sentiment_analysis = analyze_sentiment(chosen_message)
     response_message = (
-        f"Тестовое сообщение:\n\n{chosen_message}\n\n"
-        f"Тональность: {sentiment_overall}\n"
-        f"Положительные предложения: {positive_count}/{total_sentences}\n"
-        f"Отрицательные предложения: {negative_count}/{total_sentences}\n"
-        f"Нейтральные предложения: {neutral_count}/{total_sentences}"
+        f"Тестовое сообщение:\n\n'{chosen_message}'\n\n"
+        f"📊 Общая тональность: {sentiment_analysis[0]}\n"
+        f"😊 Положительные предложения: {sentiment_analysis[1]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[5]:.2f})\n"
+        f"👍 Самое позитивное предложение: '{sentiment_analysis[7]}'\n"
+        f"😡 Отрицательные предложения: {sentiment_analysis[2]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[6]:.2f})\n"
+        f"👎 Самое негативное предложение: '{sentiment_analysis[8]}'\n"
+        f"😐 Нейтральные предложения: {sentiment_analysis[3]} из {sentiment_analysis[4]}"
     )
-    await message.answer(response_message, reply_markup=types.ReplyKeyboardRemove())
+    await message.answer(response_message)
 
 
 @dp.message_handler()  # Этот обработчик будет перехватывать все остальные текстовые сообщения
 async def handle_all_other_messages(message: types.Message):
-    sentiment_overall, positive_count, negative_count, neutral_count, total_sentences = analyze_sentiment(message.text)
+    sentiment_analysis = analyze_sentiment(message.text)
     await message.answer(
-        f"Тональность вашего сообщения: {sentiment_overall}\n"
-        f"Положительные предложения: {positive_count}/{total_sentences}\n"
-        f"Отрицательные предложения: {negative_count}/{total_sentences}\n"
-        f"Нейтральные предложения: {neutral_count}/{total_sentences}"
+        f"📊 Общая тональность: {sentiment_analysis[0]}\n"
+        f"😊 Положительные предложения: {sentiment_analysis[1]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[5]:.2f})\n"
+        f"👍 Самое позитивное предложение: '{sentiment_analysis[7]}'\n"
+        f"😡 Отрицательные предложения: {sentiment_analysis[2]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[6]:.2f})\n"
+        f"👎 Самое негативное предложение: '{sentiment_analysis[8]}'\n"
+        f"😐 Нейтральные предложения: {sentiment_analysis[3]} из {sentiment_analysis[4]}"
     )
 
 
