@@ -85,10 +85,10 @@ async def send_test_message(message: types.Message):
     sentiment_analysis = analyze_sentiment(chosen_message)
     response_message = (
         f"Тестовое сообщение:\n\n'{chosen_message}'\n\n"
-        f"📊 Общая тональность: {sentiment_analysis[0]}\n"
+        f"💯 Общая тональность: {sentiment_analysis[0]}\n"
         f"➕ Положительные предложения: {sentiment_analysis[1]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[5]:.2f})\n"
         f"➖ Отрицательные предложения: {sentiment_analysis[2]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[6]:.2f})\n"
-        f"😐 Нейтральные предложения: {sentiment_analysis[3]} из {sentiment_analysis[4]}\n\n"
+        f"🆗 Нейтральные предложения: {sentiment_analysis[3]} из {sentiment_analysis[4]}\n\n"
         f"🔺📈 Самое позитивное предложение: '{sentiment_analysis[7]}'\n"
         f"🔻📉 Самое негативное предложение: '{sentiment_analysis[8]}'\n"
     )
@@ -100,10 +100,10 @@ async def handle_all_text_messages(message: types.Message):
     if message.text not in ["Примеры", "Нейтральное", "Позитивное", "Негативное"]:
         sentiment_analysis = analyze_sentiment(message.text)
         await message.reply(
-            f"📊 Общая тональность: {sentiment_analysis[0]}\n\n"
+            f"💯 Общая тональность: {sentiment_analysis[0]}\n\n"
             f"➕ Положительные предложения: {sentiment_analysis[1]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[5]:.2f})\n"
             f"➖ Отрицательные предложения: {sentiment_analysis[2]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[6]:.2f})\n"
-            f"😐 Нейтральные предложения: {sentiment_analysis[3]} из {sentiment_analysis[4]}\n\n"
+            f"🆗 Нейтральные предложения: {sentiment_analysis[3]} из {sentiment_analysis[4]}\n\n"
             f"🔺📈 Самое позитивное предложение: '{sentiment_analysis[7]}'\n"
             f"🔻📉 Самое негативное предложение: '{sentiment_analysis[8]}'\n"
         )
