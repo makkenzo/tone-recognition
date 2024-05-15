@@ -71,7 +71,7 @@ async def show_examples(message: types.Message):
     markup.add(
         types.KeyboardButton("Нейтральное"), types.KeyboardButton("Позитивное"), types.KeyboardButton("Негативное")
     )
-    await message.answer("Выберите номер:", reply_markup=markup)
+    await message.answer("Выберите пример:", reply_markup=markup)
 
 
 @dp.message_handler(lambda message: message.text in ["Нейтральное", "Позитивное", "Негативное"])
@@ -95,17 +95,18 @@ async def send_test_message(message: types.Message):
     await message.answer(response_message)
 
 
-@dp.message_handler()  # Этот обработчик будет перехватывать все остальные текстовые сообщения
-async def handle_all_other_messages(message: types.Message):
-    sentiment_analysis = analyze_sentiment(message.text)
-    await message.answer(
-        f"📊 Общая тональность: {sentiment_analysis[0]}\n"
-        f"😊 Положительные предложения: {sentiment_analysis[1]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[5]:.2f})\n"
-        f"👍 Самое позитивное предложение: '{sentiment_analysis[7]}'\n"
-        f"😡 Отрицательные предложения: {sentiment_analysis[2]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[6]:.2f})\n"
-        f"👎 Самое негативное предложение: '{sentiment_analysis[8]}'\n"
-        f"😐 Нейтральные предложения: {sentiment_analysis[3]} из {sentiment_analysis[4]}"
-    )
+@dp.message_handler(content_types=["text"])  # Этот обработчик будет перехватывать все текстовые сообщения
+async def handle_all_text_messages(message: types.Message):
+    if message.text not in ["Примеры", "Нейтральное", "Позитивное", "Негативное"]:
+        sentiment_analysis = analyze_sentiment(message.text)
+        await message.reply(
+            f"📊 Общая тональность: {sentiment_analysis[0]}\n"
+            f"😊 Положительные предложения: {sentiment_analysis[1]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[5]:.2f})\n"
+            f"👍 Самое позитивное предложение: '{sentiment_analysis[7]}'\n"
+            f"😡 Отрицательные предложения: {sentiment_analysis[2]} из {sentiment_analysis[4]} (Средняя полярность: {sentiment_analysis[6]:.2f})\n"
+            f"👎 Самое негативное предложение: '{sentiment_analysis[8]}'\n"
+            f"😐 Нейтральные предложения: {sentiment_analysis[3]} из {sentiment_analysis[4]}"
+        )
 
 
 if __name__ == "__main__":
